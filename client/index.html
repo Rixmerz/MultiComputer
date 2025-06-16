@@ -3,16 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Remote Typing - Cliente</title>
+    <title>MultiKeyboard - Control Remoto</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>⌨️ Remote Typing</h1>
-            <p>Escribe aquí para enviar al computador remoto</p>
+        <!-- Header fijo en la parte superior -->
+        <header class="top-header">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>⌨️🖱️ MultiKeyboard</h1>
+                    <p>Control remoto de teclado y mouse</p>
+                </div>
+                <button id="darkModeToggle" class="dark-mode-toggle" title="Cambiar modo oscuro">
+                    <span class="toggle-icon">🌙</span>
+                </button>
+            </div>
         </header>
 
+        <!-- Panel de conexión -->
         <div class="connection-panel">
             <div class="connection-row">
                 <input type="text" id="serverIP" placeholder="192.168.1.100" value="192.168.1.100">
@@ -24,47 +33,53 @@
             </div>
         </div>
 
-        <div class="screen-panel">
-            <div class="screen-controls">
-                <label>Configuración de pantallas:</label>
-                <div class="screen-config">
-                    <div>
-                        <label>Pantalla 1 (arriba): </label>
-                        <input type="number" id="screen1Width" value="1920" placeholder="Ancho"> x 
-                        <input type="number" id="screen1Height" value="1080" placeholder="Alto">
-                    </div>
-                    <div>
-                        <label>Pantalla 2 (abajo): </label>
-                        <input type="number" id="screen2Width" value="1920" placeholder="Ancho"> x 
-                        <input type="number" id="screen2Height" value="1080" placeholder="Alto">
-                    </div>
-                    <button id="updateScreens">Actualizar</button>
-                </div>
+        <!-- Información de pantalla -->
+        <div class="screen-info-panel">
+            <div class="screen-info-grid">
+                <span id="screenResolution">Resolución: Detectando...</span>
+                <span id="mousePosition">Mouse: (0, 0)</span>
+                <span id="precisionInfo">Precisión: Calculando...</span>
             </div>
-            
-            <div class="screen-display">
-                <canvas id="screenCanvas" width="400" height="300"></canvas>
-                <div class="screen-info">
-                    <span id="mousePosition">Mouse: (0, 0)</span>
-                    <span id="activeScreen">Pantalla: 1</span>
+        </div>
+
+        <!-- Canvas principal - ocupa todo el espacio disponible -->
+        <div class="canvas-section">
+            <div class="canvas-container">
+                <canvas id="screenCanvas" tabindex="0"></canvas>
+                <!-- Input invisible para capturar escritura -->
+                <input type="text" id="hiddenTextInput" class="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            </div>
+        </div>
+
+        <!-- Panel de controles en la parte inferior -->
+        <div class="controls-panel">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <h3>🖱️ Control de Mouse</h3>
+                    <div class="mouse-controls">
+                        <label class="switch-container">
+                            <span class="switch-label">Control de Mouse (movimiento y clicks)</span>
+                            <label class="switch">
+                                <input type="checkbox" id="mouseTrackingToggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>⌨️ Información</h3>
+                    <div class="info-text">
+                        <p>🎯 <strong>Área verde:</strong> Pantalla remota | <strong>Área gris:</strong> Margen de seguridad</p>
+                        <p>⌨️ <strong>Escritura global:</strong> Escribe desde cualquier lugar sin hacer click</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="typing-panel">
-            <textarea 
-                id="textInput" 
-                placeholder="Escribe aquí - se enviará automáticamente al computador remoto..."
-                disabled
-            ></textarea>
-            
-            <div class="info">
-                <span>✨ Escritura en tiempo real - sin necesidad de enviar</span>
-            </div>
-        </div>
-
+        <!-- Panel de debug -->
         <div class="debug-panel">
-            <h3>Debug</h3>
+            <h3>🐛 Debug</h3>
             <div id="debugLog"></div>
         </div>
     </div>

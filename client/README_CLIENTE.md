@@ -1,6 +1,6 @@
 # 🖥️ MultiKeyboard - Cliente Web
 
-Cliente web para controlar remotamente la escritura en otro computador.
+Cliente web para controlar remotamente el teclado y mouse de otro computador.
 
 ## 🚀 Inicio Rápido
 
@@ -95,6 +95,9 @@ client/
 ## 🎯 Características
 
 - ✅ **Escritura en tiempo real** - Cada caracter se envía inmediatamente
+- ✅ **Control de mouse** - Movimiento, clicks izquierdo/derecho directo 1:1
+- ✅ **Detección automática de pantalla** - Se adapta a la resolución del servidor
+- ✅ **Interfaz simplificada** - Canvas único con mapeo directo
 - ✅ **Teclas especiales** - Soporta Backspace y Enter
 - ✅ **Debug log** - Muestra estado de conexiones
 - ✅ **Responsive** - Funciona en computador y móvil
