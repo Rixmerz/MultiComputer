@@ -147,6 +147,82 @@ export class ApiClient {
         }
     }
 
+    async sendMouseDragStart(x, y, button = 'left') {
+        try {
+            const response = await fetch(`${this.client.connection.getServerURL()}/mouse`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'drag_start',
+                    x: x,
+                    y: y,
+                    button: button
+                })
+            });
+
+            if (response.ok) {
+                this.client.logger.log(`🤏 Drag start (${x}, ${y})`, 'success');
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (error) {
+            this.client.logger.log(`❌ Error drag start: ${error.message}`, 'error');
+            if (error.name === 'TypeError' || error.message.includes('fetch')) {
+                this.client.connection.disconnect();
+            }
+        }
+    }
+
+    async sendMouseDragRealtime(x, y) {
+        try {
+            // Fire-and-forget para máxima velocidad
+            fetch(`${this.client.connection.getServerURL()}/mouse`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'drag_move',
+                    x: x,
+                    y: y
+                })
+            }).catch(() => {}); // Ignorar errores para no bloquear
+
+        } catch (error) {
+            // Silencioso para no spam de logs
+        }
+    }
+
+    async sendMouseDragEnd(x, y, button = 'left') {
+        try {
+            const response = await fetch(`${this.client.connection.getServerURL()}/mouse`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'drag_end',
+                    x: x,
+                    y: y,
+                    button: button
+                })
+            });
+
+            if (response.ok) {
+                this.client.logger.log(`🤏 Drag end (${x}, ${y})`, 'success');
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (error) {
+            this.client.logger.log(`❌ Error drag end: ${error.message}`, 'error');
+            if (error.name === 'TypeError' || error.message.includes('fetch')) {
+                this.client.connection.disconnect();
+            }
+        }
+    }
+
     async sendMouseScroll(x, y, amount) {
         try {
             // Fire-and-forget para mínima latencia - no esperamos respuesta

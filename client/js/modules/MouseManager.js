@@ -50,11 +50,17 @@ export class MouseManager {
         const dragIndicator = this.isDragging ? ' [ARRASTRANDO]' : '';
         this.client.ui.mousePosition.textContent = `Mouse: (${boundedX}, ${boundedY})${areaIndicator}${trackingIndicator}${dragIndicator}`;
 
-        // Send mouse coordinates if connected, tracking enabled, in usable area, and NOT dragging
-        if (this.client.connection.getConnectionStatus() && !this.mouseThrottle && inUsableArea && trackingEnabled && !this.isDragging) {
+        // Send mouse coordinates - INCLUIR durante drag para realtime
+        if (this.client.connection.getConnectionStatus() && !this.mouseThrottle && inUsableArea && trackingEnabled) {
             this.mouseThrottle = true;
             setTimeout(() => {
-                this.client.api.sendMouseMove(boundedX, boundedY);
+                if (this.isDragging) {
+                    // Durante drag, enviar como drag realtime
+                    this.client.api.sendMouseDragRealtime(boundedX, boundedY);
+                } else {
+                    // Movimiento normal
+                    this.client.api.sendMouseMove(boundedX, boundedY);
+                }
                 this.mouseThrottle = false;
             }, 16); // ~60fps para mayor suavidad
         }
@@ -132,7 +138,10 @@ export class MouseManager {
         // Cambiar cursor para indicar drag
         this.client.canvas.canvas.style.cursor = 'grabbing';
 
-        this.client.logger.log(`🤏 Drag iniciado en (${coords.boundedX}, ${coords.boundedY})`, 'success');
+        // Enviar comando de inicio de drag al servidor
+        this.client.api.sendMouseDragStart(coords.boundedX, coords.boundedY);
+
+        this.client.logger.log(`🤏 Drag REALTIME iniciado en (${coords.boundedX}, ${coords.boundedY})`, 'success');
     }
 
     handleCanvasMouseUp(e) {
@@ -152,20 +161,15 @@ export class MouseManager {
 
         this.client.logger.log(`🔍 Distancia de drag calculada: ${Math.round(dragDistance)}px desde (${this.dragStartX}, ${this.dragStartY}) hasta (${coords.boundedX}, ${coords.boundedY})`, 'info');
 
-        // Solo enviar drag si hay movimiento significativo (más de 2 píxeles - reducido para mayor sensibilidad)
-        if (dragDistance > 2) {
-            this.client.logger.log(`✅ Enviando comando de drag al servidor`, 'success');
-            this.client.api.sendMouseDrag(this.dragStartX, this.dragStartY, coords.boundedX, coords.boundedY);
-            this.justFinishedDrag = true; // Marcar que acabamos de hacer drag
-        } else {
-            this.client.logger.log(`⚠️ Drag muy pequeño (${Math.round(dragDistance)}px) - no se envía`, 'warning');
-        }
+        // Enviar comando de fin de drag al servidor
+        this.client.api.sendMouseDragEnd(coords.boundedX, coords.boundedY);
+        this.justFinishedDrag = true; // Marcar que acabamos de hacer drag
 
         // Finalizar drag
         this.isDragging = false;
         this.client.canvas.canvas.style.cursor = 'grab';
 
-        this.client.logger.log(`🤏 Drag finalizado en (${coords.boundedX}, ${coords.boundedY}) - distancia: ${Math.round(dragDistance)}px`, 'success');
+        this.client.logger.log(`🤏 Drag REALTIME finalizado en (${coords.boundedX}, ${coords.boundedY}) - distancia: ${Math.round(dragDistance)}px`, 'success');
 
         // Limpiar la bandera después de un breve delay
         setTimeout(() => {

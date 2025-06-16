@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Remote Typing Server - Computador Esclavo
-Recibe texto via HTTP y lo simula como escritura
+VERSIÓN CON DRAG REALTIME
 """
 
 from flask import Flask, request, jsonify
@@ -12,31 +12,18 @@ import pyautogui
 import socket
 import threading
 import time
-import logging
-
-# ============================================================================
-# CONFIGURACIÓN DE DEBUG
-# ============================================================================
-# Cambiar DEBUG_MODE a True para ver todos los mensajes de actividad
-# Cambiar DEBUG_MODE a False para modo silencioso (solo errores importantes)
-DEBUG_MODE = False
-# ============================================================================
 
 app = Flask(__name__)
 CORS(app)  # Permite conexiones desde cualquier origen
-
-# Configurar logging de Flask
-if not DEBUG_MODE:
-    # Deshabilitar logs de Flask cuando debug está desactivado
-    log = logging.getLogger('werkzeug')
-    log.setLevel(logging.ERROR)
-
 keyboard = Controller()
 mouse = MouseController()
 
-# Configurar pyautogui para mayor seguridad
+# Configurar pyautogui para mayor seguridad y velocidad
 pyautogui.FAILSAFE = True  # Mover mouse a esquina superior izquierda para parar
-pyautogui.PAUSE = 0.1  # Pausa entre comandos
+pyautogui.PAUSE = 0.02  # Pausa muy reducida para drag realtime
+
+# Modo debug - cambiar a False para producción
+DEBUG_MODE = True
 
 # Estado de conexión
 connection_status = {
@@ -140,101 +127,80 @@ def handle_mouse():
                 print(f"🖱️  {message}")
 
         elif action == 'drag_start':
-            # Iniciar drag realtime - presionar botón y mantener
+            # NUEVO: Iniciar drag realtime - presionar botón y mantener
             button_map = {
                 'left': 'left',
                 'right': 'right',
                 'middle': 'middle'
             }
-
+            
             # Mover a posición inicial y presionar botón
             pyautogui.moveTo(x, y, duration=0.05)
             pyautogui.mouseDown(button=button_map.get(button, 'left'))
-
+            
             message = f'Drag start at ({x}, {y})'
             if DEBUG_MODE:
-                print(f"🤏 {message}")
+                print(f"🤏 REALTIME {message}")
 
         elif action == 'drag_move':
-            # Mover durante drag realtime - solo mover el mouse (botón ya presionado)
-            pyautogui.moveTo(x, y, duration=0.02)  # Movimiento muy rápido para realtime
-
+            # NUEVO: Mover durante drag realtime - solo mover el mouse (botón ya presionado)
+            pyautogui.moveTo(x, y, duration=0.01)  # Movimiento ultra-rápido para realtime
+            
             # No hacer log para evitar spam
             message = f'Drag move to ({x}, {y})'
 
         elif action == 'drag_end':
-            # Finalizar drag realtime - mover a posición final y soltar botón
+            # NUEVO: Finalizar drag realtime - mover a posición final y soltar botón
             button_map = {
                 'left': 'left',
                 'right': 'right',
                 'middle': 'middle'
             }
-
+            
             pyautogui.moveTo(x, y, duration=0.05)
             pyautogui.mouseUp(button=button_map.get(button, 'left'))
-
+            
             message = f'Drag end at ({x}, {y})'
             if DEBUG_MODE:
-                print(f"🤏 {message}")
+                print(f"🤏 REALTIME {message}")
 
         elif action == 'drag':
-            # Para drag necesitamos coordenadas de destino
+            # LEGACY: Drag tradicional (proyección) - mantener para compatibilidad
             to_x = data.get('to_x', x)
             to_y = data.get('to_y', y)
             to_x = max(0, min(to_x, max_x - 1))
             to_y = max(0, min(to_y, max_y - 1))
 
-            # Mapear botones para drag
             button_map = {
                 'left': 'left',
                 'right': 'right',
                 'middle': 'middle'
             }
-
-            # Implementar drag correctamente:
-            # 1. Mover a la posición inicial
-            # 2. Presionar el botón
-            # 3. Arrastrar a la posición final
-            # 4. Soltar el botón
-
+            
+            if DEBUG_MODE:
+                print(f"🤏 LEGACY DRAG: desde ({x}, {y}) hasta ({to_x}, {to_y})")
+            
             try:
-                # Mover a posición inicial
                 pyautogui.moveTo(x, y, duration=0.1)
-
-                # Hacer el drag desde la posición actual hasta la final
                 pyautogui.dragTo(to_x, to_y, duration=0.3, button=button_map.get(button, 'left'))
-
                 message = f'Mouse drag from ({x}, {y}) to ({to_x}, {to_y})'
                 if DEBUG_MODE:
-                    print(f"🖱️  {message}")
-
+                    print(f"✅ LEGACY DRAG EXITOSO: {message}")
             except Exception as drag_error:
-                # Si dragTo falla, intentar método alternativo
                 if DEBUG_MODE:
-                    print(f"⚠️  dragTo falló, usando método alternativo: {drag_error}")
-
-                # Método alternativo: mouseDown, moveTo, mouseUp
+                    print(f"⚠️  dragTo falló, usando método manual: {drag_error}")
                 pyautogui.moveTo(x, y, duration=0.1)
                 pyautogui.mouseDown(button=button_map.get(button, 'left'))
                 pyautogui.moveTo(to_x, to_y, duration=0.3)
                 pyautogui.mouseUp(button=button_map.get(button, 'left'))
-
-                message = f'Mouse drag (alternative) from ({x}, {y}) to ({to_x}, {to_y})'
-                if DEBUG_MODE:
-                    print(f"🖱️  {message}")
+                message = f'Mouse drag (manual) from ({x}, {y}) to ({to_x}, {to_y})'
 
         elif action == 'scroll':
             scroll_amount = data.get('amount', 1)
-
-            # Temporalmente reducir pausa para scroll más responsivo
             original_pause = pyautogui.PAUSE
-            pyautogui.PAUSE = 0.01  # Pausa mínima para scroll
-
+            pyautogui.PAUSE = 0.01
             pyautogui.scroll(scroll_amount, x=x, y=y)
-
-            # Restaurar pausa original
             pyautogui.PAUSE = original_pause
-
             message = f'Mouse scroll {scroll_amount} at ({x}, {y})'
             if DEBUG_MODE:
                 print(f"🖱️  {message}")
@@ -248,7 +214,6 @@ def handle_mouse():
         if action == 'move' and not DEBUG_MODE:
             return jsonify({'status': 'success'})
         elif action == 'scroll' and not DEBUG_MODE:
-            # Respuesta mínima para scroll - máxima velocidad
             return jsonify({'status': 'success'})
         elif action == 'drag_move':
             # Respuesta ultra-rápida para drag realtime - sin JSON para máxima velocidad
@@ -285,7 +250,6 @@ def handle_special_key():
             
         connection_status['last_activity'] = time.time()
 
-        # Solo mostrar mensaje de debug si está habilitado
         if DEBUG_MODE:
             print(f"🔑 Special key: {action}")
 
@@ -305,11 +269,9 @@ def handle_typing():
         text = data.get('text', '')
         
         if text:
-            # Simula la escritura del texto
             keyboard.type(text)
             connection_status['last_activity'] = time.time()
 
-            # Solo mostrar mensaje de debug si está habilitado
             if DEBUG_MODE:
                 message = f'Typed: {text[:50]}...' if len(text) > 50 else f'Typed: {text}'
                 print(f"⌨️  {message}")
@@ -341,21 +303,25 @@ def ping():
 
 if __name__ == '__main__':
     local_ip = get_local_ip()
-    print("=" * 50)
-    print("🖥️  Remote Typing Server - ESCLAVO")
-    print("=" * 50)
+    print("=" * 70)
+    print("🖥️  Remote Typing Server - ESCLAVO (DRAG REALTIME)")
+    print("=" * 70)
     print(f"🌐 Servidor iniciado en: http://{local_ip}:5000")
     print(f"📡 IP Local: {local_ip}")
     print("🔗 Usa esta IP en el cliente para conectar")
     print("⌨️  Listo para recibir comandos de escritura...")
+    print("🤏 DRAG REALTIME: ¡Ahora con movimiento en tiempo real!")
+    print("   • drag_start: Presiona botón y mantiene")
+    print("   • drag_move: Mueve mouse en tiempo real")
+    print("   • drag_end: Suelta botón")
     if DEBUG_MODE:
         print("🐛 Modo DEBUG activado - Se mostrarán todos los mensajes")
     else:
         print("🔇 Modo silencioso activado - Solo errores importantes")
-    print("=" * 50)
+    print("=" * 70)
     print("Presiona Ctrl+C para detener el servidor")
     print()
-
+    
     try:
         app.run(host='0.0.0.0', port=5000, debug=False)
     except KeyboardInterrupt:

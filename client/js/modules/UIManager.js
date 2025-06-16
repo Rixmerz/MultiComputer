@@ -115,8 +115,8 @@ export class UIManager {
                 return;
             }
 
-            this.client.logger.log(`🧪 Iniciando test de drag...`, 'info');
-            this.client.api.sendMouseDrag(100, 100, 200, 200);
+            this.client.logger.log(`🧪 Iniciando test de drag REALTIME...`, 'info');
+            this.testRealtimeDrag();
         });
 
         // Window resize event with debouncing
@@ -137,5 +137,28 @@ export class UIManager {
                 this.client.canvas.canvas.focus();
             }
         });
+    }
+
+    async testRealtimeDrag() {
+        this.client.logger.log(`🧪 Test REALTIME: Iniciando drag...`, 'info');
+
+        // 1. Iniciar drag
+        await this.client.api.sendMouseDragStart(100, 100);
+
+        // 2. Simular movimiento realtime
+        const steps = 20;
+        for (let i = 0; i <= steps; i++) {
+            const progress = i / steps;
+            const x = 100 + (100 * progress); // De 100 a 200
+            const y = 100 + (50 * progress);  // De 100 a 150
+
+            await this.client.api.sendMouseDragRealtime(Math.round(x), Math.round(y));
+            await new Promise(resolve => setTimeout(resolve, 50)); // 50ms entre pasos
+        }
+
+        // 3. Finalizar drag
+        await this.client.api.sendMouseDragEnd(200, 150);
+
+        this.client.logger.log(`🧪 Test REALTIME: Drag completado!`, 'success');
     }
 }
