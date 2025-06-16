@@ -1,3 +1,17 @@
+/**
+ * ARCHIVO LEGACY - RESPALDO DEL CÓDIGO ORIGINAL
+ *
+ * Este archivo contiene el código original monolítico antes de la refactorización.
+ * Se mantiene como respaldo y referencia.
+ *
+ * NUEVA ARQUITECTURA MODULAR EN: js/main.js
+ *
+ * Fecha de refactorización: 2025-06-16
+ * Líneas originales: 1,036
+ * Módulos creados: 8
+ */
+
+// CÓDIGO ORIGINAL - NO MODIFICAR
 class RemoteTypingClient {
     constructor() {
         this.serverURL = '';
@@ -34,6 +48,13 @@ class RemoteTypingClient {
         this.lastMouseY = 0;
         this.lastCanvasX = 0;
         this.lastCanvasY = 0;
+
+        // Variables para drag/arrastrar
+        this.isDragging = false;
+        this.dragStartX = 0;
+        this.dragStartY = 0;
+        this.dragStartCanvasX = 0;
+        this.dragStartCanvasY = 0;
         
         this.initEventListeners();
         this.initDarkMode();
@@ -41,6 +62,7 @@ class RemoteTypingClient {
         this.updateCanvasSize();
         this.drawScreen();
         this.log('Cliente iniciado - Canvas de pantalla completa', 'info');
+        this.log('🤏 Funcionalidad de arrastrar habilitada - mantén presionado y arrastra para mover ventanas', 'info');
     }
 
     initEventListeners() {
@@ -73,14 +95,26 @@ class RemoteTypingClient {
             this.handleCanvasClick(e);
         });
 
+        // Eventos para drag/arrastrar
+        this.canvas.addEventListener('mousedown', (e) => {
+            this.handleCanvasMouseDown(e);
+        });
+
+        this.canvas.addEventListener('mouseup', (e) => {
+            this.handleCanvasMouseUp(e);
+        });
+
         // Capturar eventos de scroll en el canvas
         this.canvas.addEventListener('wheel', (e) => {
             e.preventDefault(); // Prevenir scroll de la página
             this.handleCanvasScroll(e);
         });
 
-        // Limpiar cursor cuando el mouse sale del canvas
-        this.canvas.addEventListener('mouseleave', () => {
+        // Manejar cuando el mouse sale del canvas
+        this.canvas.addEventListener('mouseleave', (e) => {
+            if (this.isDragging) {
+                this.handleCanvasMouseUp(e);
+            }
             this.drawScreen(); // Redibujar sin cursor
         });
 
@@ -96,7 +130,7 @@ class RemoteTypingClient {
 
             // Actualizar el cursor del canvas según el estado del tracking
             if (isEnabled) {
-                this.canvas.style.cursor = 'crosshair';
+                this.canvas.style.cursor = 'grab';
             } else {
                 this.canvas.style.cursor = 'not-allowed';
             }
@@ -274,6 +308,10 @@ class RemoteTypingClient {
                 // Cursor gris cuando el tracking está desactivado
                 cursorColor = '#95a5a6';
                 cursorSize = 3;
+            } else if (this.isDragging) {
+                // Cursor azul cuando está arrastrando
+                cursorColor = '#3498db';
+                cursorSize = 5;
             } else if (this.inUsableArea) {
                 // Cursor rojo cuando está en área útil y tracking activo
                 cursorColor = '#e74c3c';
@@ -304,6 +342,34 @@ class RemoteTypingClient {
                 this.ctx.lineTo(this.lastCanvasX + 6, this.lastCanvasY + 6);
                 this.ctx.moveTo(this.lastCanvasX + 6, this.lastCanvasY - 6);
                 this.ctx.lineTo(this.lastCanvasX - 6, this.lastCanvasY + 6);
+                this.ctx.stroke();
+            } else if (this.isDragging) {
+                // Cuando está arrastrando, mostrar línea desde punto de inicio
+                if (this.dragStartCanvasX !== undefined && this.dragStartCanvasY !== undefined) {
+                    this.ctx.strokeStyle = cursorColor;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.setLineDash([5, 5]);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.dragStartCanvasX, this.dragStartCanvasY);
+                    this.ctx.lineTo(this.lastCanvasX, this.lastCanvasY);
+                    this.ctx.stroke();
+                    this.ctx.setLineDash([]); // Reset line dash
+
+                    // Mostrar punto de inicio
+                    this.ctx.fillStyle = '#2c3e50';
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.dragStartCanvasX, this.dragStartCanvasY, 3, 0, 2 * Math.PI);
+                    this.ctx.fill();
+                }
+
+                // Agregar cruz más grande para drag
+                this.ctx.strokeStyle = cursorColor;
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.lastCanvasX - 10, this.lastCanvasY);
+                this.ctx.lineTo(this.lastCanvasX + 10, this.lastCanvasY);
+                this.ctx.moveTo(this.lastCanvasX, this.lastCanvasY - 10);
+                this.ctx.lineTo(this.lastCanvasX, this.lastCanvasY + 10);
                 this.ctx.stroke();
             } else if (this.inUsableArea) {
                 // Agregar cruz para mayor precisión (solo en área útil y tracking activo)
@@ -363,10 +429,11 @@ class RemoteTypingClient {
         const trackingEnabled = this.mouseTrackingToggle.checked;
         const areaIndicator = inUsableArea ? '' : ' (margen)';
         const trackingIndicator = trackingEnabled ? '' : ' [CONTROL DESACTIVADO]';
-        this.mousePosition.textContent = `Mouse: (${boundedX}, ${boundedY})${areaIndicator}${trackingIndicator}`;
+        const dragIndicator = this.isDragging ? ' [ARRASTRANDO]' : '';
+        this.mousePosition.textContent = `Mouse: (${boundedX}, ${boundedY})${areaIndicator}${trackingIndicator}${dragIndicator}`;
 
-        // Send mouse coordinates if connected, tracking enabled, and in usable area
-        if (this.isConnected && !this.mouseThrottle && inUsableArea && trackingEnabled) {
+        // Send mouse coordinates if connected, tracking enabled, in usable area, and NOT dragging
+        if (this.isConnected && !this.mouseThrottle && inUsableArea && trackingEnabled && !this.isDragging) {
             this.mouseThrottle = true;
             setTimeout(() => {
                 this.sendMouseMove(boundedX, boundedY);
@@ -725,6 +792,122 @@ class RemoteTypingClient {
 
         } catch (error) {
             this.log(`❌ Error scroll: ${error.message}`, 'error');
+        }
+    }
+
+    handleCanvasMouseDown(e) {
+        if (!this.isConnected) return;
+
+        // Verificar si el tracking de mouse está habilitado
+        const trackingEnabled = this.mouseTrackingToggle.checked;
+        if (!trackingEnabled) {
+            return;
+        }
+
+        // Usar la misma lógica de precisión que en otros métodos
+        const rect = this.canvas.getBoundingClientRect();
+        const canvasX = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+        const canvasY = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+
+        // Ajustar coordenadas considerando el margen
+        const margin = this.edgeMargin || 20;
+        const adjustedX = canvasX - margin;
+        const adjustedY = canvasY - margin;
+
+        // Solo permitir drag en el área útil
+        const nearEdge = (adjustedX >= -10 && adjustedX <= this.usableWidth + 10 &&
+                         adjustedY >= -10 && adjustedY <= this.usableHeight + 10);
+
+        if (!nearEdge) {
+            return;
+        }
+
+        // Convert canvas coordinates to server screen coordinates
+        const serverX = Math.round(adjustedX / this.canvasScale);
+        const serverY = Math.round(adjustedY / this.canvasScale);
+
+        // Ensure coordinates are within bounds
+        const boundedX = Math.max(0, Math.min(serverX, this.serverScreen.width - 1));
+        const boundedY = Math.max(0, Math.min(serverY, this.serverScreen.height - 1));
+
+        // Iniciar drag
+        this.isDragging = true;
+        this.dragStartX = boundedX;
+        this.dragStartY = boundedY;
+        this.dragStartCanvasX = canvasX;
+        this.dragStartCanvasY = canvasY;
+
+        // Cambiar cursor para indicar drag
+        this.canvas.style.cursor = 'grabbing';
+
+        this.log(`🤏 Drag iniciado en (${boundedX}, ${boundedY})`, 'info');
+    }
+
+    handleCanvasMouseUp(e) {
+        if (!this.isDragging) return;
+
+        // Usar la misma lógica de precisión que en otros métodos
+        const rect = this.canvas.getBoundingClientRect();
+        const canvasX = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+        const canvasY = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+
+        // Ajustar coordenadas considerando el margen
+        const margin = this.edgeMargin || 20;
+        const adjustedX = canvasX - margin;
+        const adjustedY = canvasY - margin;
+
+        // Convert canvas coordinates to server screen coordinates
+        const serverX = Math.round(adjustedX / this.canvasScale);
+        const serverY = Math.round(adjustedY / this.canvasScale);
+
+        // Ensure coordinates are within bounds
+        const boundedX = Math.max(0, Math.min(serverX, this.serverScreen.width - 1));
+        const boundedY = Math.max(0, Math.min(serverY, this.serverScreen.height - 1));
+
+        // Calcular distancia del drag
+        const dragDistanceX = boundedX - this.dragStartX;
+        const dragDistanceY = boundedY - this.dragStartY;
+        const dragDistance = Math.sqrt(dragDistanceX * dragDistanceX + dragDistanceY * dragDistanceY);
+
+        // Solo enviar drag si hay movimiento significativo (más de 3 píxeles)
+        if (dragDistance > 3) {
+            this.sendMouseDrag(this.dragStartX, this.dragStartY, boundedX, boundedY);
+        }
+
+        // Finalizar drag
+        this.isDragging = false;
+        this.canvas.style.cursor = 'grab';
+
+        this.log(`🤏 Drag finalizado en (${boundedX}, ${boundedY}) - distancia: ${Math.round(dragDistance)}px`, 'info');
+    }
+
+    async sendMouseDrag(fromX, fromY, toX, toY, button = 'left') {
+        try {
+            const response = await fetch(`${this.serverURL}/mouse`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'drag',
+                    x: fromX,
+                    y: fromY,
+                    to_x: toX,
+                    to_y: toY,
+                    button: button
+                })
+            });
+
+            if (response.ok) {
+                this.log(`🖱️ drag desde (${fromX}, ${fromY}) hasta (${toX}, ${toY})`, 'success');
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (error) {
+            this.log(`❌ Error drag: ${error.message}`, 'error');
+            if (error.name === 'TypeError' || error.message.includes('fetch')) {
+                this.disconnect();
+            }
         }
     }
 
