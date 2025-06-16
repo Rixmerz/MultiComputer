@@ -70,6 +70,8 @@ MultiKeyboard/
 
 - ✅ **Control completo de mouse** - Movimiento, clicks, y tracking preciso
 - ✅ **Escritura en tiempo real** - Cada caracter se envía inmediatamente
+- ✅ **Control completo de mouse** - Movimiento, clicks (izq/der/medio), scroll
+- ✅ **Scroll inteligente** - Scroll en canvas sin afectar la página web
 - ✅ **Teclas especiales** - Soporta Backspace, Enter
 - ✅ **Multiplataforma** - Windows, macOS, Linux
 - ✅ **Interfaz web moderna** - Funciona en cualquier navegador

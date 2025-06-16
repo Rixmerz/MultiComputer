@@ -12,9 +12,25 @@ import pyautogui
 import socket
 import threading
 import time
+import logging
+
+# ============================================================================
+# CONFIGURACIÓN DE DEBUG
+# ============================================================================
+# Cambiar DEBUG_MODE a True para ver todos los mensajes de actividad
+# Cambiar DEBUG_MODE a False para modo silencioso (solo errores importantes)
+DEBUG_MODE = False
+# ============================================================================
 
 app = Flask(__name__)
 CORS(app)  # Permite conexiones desde cualquier origen
+
+# Configurar logging de Flask
+if not DEBUG_MODE:
+    # Deshabilitar logs de Flask cuando debug está desactivado
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+
 keyboard = Controller()
 mouse = MouseController()
 
@@ -109,7 +125,7 @@ def handle_mouse():
 
         if action == 'move':
             pyautogui.moveTo(x, y, duration=0.1)
-            message = f'Mouse moved to ({x}, {y})'
+            message = f'Mouse moved to ({x}, {y})' if DEBUG_MODE else 'OK'
 
         elif action == 'click':
             # Mapear botones
@@ -120,6 +136,8 @@ def handle_mouse():
             }
             pyautogui.click(x, y, button=button_map.get(button, 'left'))
             message = f'Mouse {button} click at ({x}, {y})'
+            if DEBUG_MODE:
+                print(f"🖱️  {message}")
 
         elif action == 'drag':
             # Para drag necesitamos coordenadas de destino
@@ -130,21 +148,42 @@ def handle_mouse():
 
             pyautogui.drag(to_x - x, to_y - y, duration=0.2, button=button_map.get(button, 'left'))
             message = f'Mouse drag from ({x}, {y}) to ({to_x}, {to_y})'
+            if DEBUG_MODE:
+                print(f"🖱️  {message}")
 
         elif action == 'scroll':
             scroll_amount = data.get('amount', 1)
+
+            # Temporalmente reducir pausa para scroll más responsivo
+            original_pause = pyautogui.PAUSE
+            pyautogui.PAUSE = 0.01  # Pausa mínima para scroll
+
             pyautogui.scroll(scroll_amount, x=x, y=y)
+
+            # Restaurar pausa original
+            pyautogui.PAUSE = original_pause
+
             message = f'Mouse scroll {scroll_amount} at ({x}, {y})'
+            if DEBUG_MODE:
+                print(f"🖱️  {message}")
 
         else:
             return jsonify({'status': 'error', 'message': f'Acción no reconocida: {action}'}), 400
 
         connection_status['last_activity'] = time.time()
-        return jsonify({
-            'status': 'success',
-            'message': message,
-            'coordinates': {'x': x, 'y': y}
-        })
+
+        # Respuestas optimizadas para baja latencia
+        if action == 'move' and not DEBUG_MODE:
+            return jsonify({'status': 'success'})
+        elif action == 'scroll' and not DEBUG_MODE:
+            # Respuesta mínima para scroll - máxima velocidad
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({
+                'status': 'success',
+                'message': message,
+                'coordinates': {'x': x, 'y': y}
+            })
 
     except pyautogui.FailSafeException:
         return jsonify({'status': 'error', 'message': 'FailSafe activado - mouse movido a esquina'}), 400
@@ -170,9 +209,14 @@ def handle_special_key():
             return jsonify({'status': 'error', 'message': 'Tecla especial no reconocida'}), 400
             
         connection_status['last_activity'] = time.time()
+
+        # Solo mostrar mensaje de debug si está habilitado
+        if DEBUG_MODE:
+            print(f"🔑 Special key: {action}")
+
         return jsonify({
             'status': 'success',
-            'message': f'Special key: {action}'
+            'message': f'Special key: {action}' if DEBUG_MODE else 'OK'
         })
         
     except Exception as e:
@@ -189,10 +233,15 @@ def handle_typing():
             # Simula la escritura del texto
             keyboard.type(text)
             connection_status['last_activity'] = time.time()
-            
+
+            # Solo mostrar mensaje de debug si está habilitado
+            if DEBUG_MODE:
+                message = f'Typed: {text[:50]}...' if len(text) > 50 else f'Typed: {text}'
+                print(f"⌨️  {message}")
+
             return jsonify({
                 'status': 'success',
-                'message': f'Typed: {text[:50]}...' if len(text) > 50 else f'Typed: {text}'
+                'message': f'Typed: {text[:50]}...' if len(text) > 50 else f'Typed: {text}' if DEBUG_MODE else 'OK'
             })
         else:
             return jsonify({'status': 'error', 'message': 'No text provided'}), 400
@@ -224,10 +273,14 @@ if __name__ == '__main__':
     print(f"📡 IP Local: {local_ip}")
     print("🔗 Usa esta IP en el cliente para conectar")
     print("⌨️  Listo para recibir comandos de escritura...")
+    if DEBUG_MODE:
+        print("🐛 Modo DEBUG activado - Se mostrarán todos los mensajes")
+    else:
+        print("🔇 Modo silencioso activado - Solo errores importantes")
     print("=" * 50)
     print("Presiona Ctrl+C para detener el servidor")
     print()
-    
+
     try:
         app.run(host='0.0.0.0', port=5000, debug=False)
     except KeyboardInterrupt:

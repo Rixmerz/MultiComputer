@@ -25,7 +25,8 @@ class RemoteTypingClient {
             height: 1080
         };
         this.canvasScale = 1; // Direct 1:1 mapping initially
-        this.mouseThrottle = false; // Para throttling de mouse
+        this.mouseThrottle = false; // Para throttling de mouse movements
+        this.scrollThrottle = false; // Para throttling de scroll (separado y más rápido)
         this.serverScreenInfo = null; // Info de pantalla del servidor
 
         // Variables para tracking preciso del mouse
@@ -70,6 +71,12 @@ class RemoteTypingClient {
         this.canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault(); // Prevenir menú contextual
             this.handleCanvasClick(e);
+        });
+
+        // Capturar eventos de scroll en el canvas
+        this.canvas.addEventListener('wheel', (e) => {
+            e.preventDefault(); // Prevenir scroll de la página
+            this.handleCanvasScroll(e);
         });
 
         // Limpiar cursor cuando el mouse sale del canvas
@@ -416,6 +423,71 @@ class RemoteTypingClient {
         this.sendMouseClick(boundedX, boundedY, button);
     }
 
+    handleCanvasScroll(e) {
+        if (!this.isConnected) return;
+
+        // Verificar si el tracking de mouse está habilitado
+        const trackingEnabled = this.mouseTrackingToggle.checked;
+        if (!trackingEnabled) {
+            this.log(`🚫 Scroll bloqueado - Tracking de mouse desactivado`, 'warning');
+            return;
+        }
+
+        // Usar la misma lógica de precisión que en mousemove para obtener coordenadas
+        const rect = this.canvas.getBoundingClientRect();
+        const canvasX = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+        const canvasY = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+
+        // Ajustar coordenadas considerando el margen
+        const margin = this.edgeMargin || 20;
+        const adjustedX = canvasX - margin;
+        const adjustedY = canvasY - margin;
+
+        // Convert canvas coordinates to server screen coordinates
+        const serverX = Math.round(adjustedX / this.canvasScale);
+        const serverY = Math.round(adjustedY / this.canvasScale);
+
+        // Ensure coordinates are within bounds
+        const boundedX = Math.max(0, Math.min(serverX, this.serverScreen.width - 1));
+        const boundedY = Math.max(0, Math.min(serverY, this.serverScreen.height - 1));
+
+        // Solo permitir scroll en el área útil
+        const nearEdge = (adjustedX >= -10 && adjustedX <= this.usableWidth + 10 &&
+                         adjustedY >= -10 && adjustedY <= this.usableHeight + 10);
+
+        if (!nearEdge) {
+            this.log(`⚠️ Scroll fuera del área válida: (${serverX}, ${serverY})`, 'warning');
+            return;
+        }
+
+        // Calcular la cantidad de scroll - MUCHO MÁS RÁPIDO
+        // deltaY positivo = scroll hacia abajo, negativo = scroll hacia arriba
+        let scrollAmount;
+
+        // Detectar tipo de dispositivo de scroll con velocidades muy agresivas
+        if (Math.abs(e.deltaY) < 10) {
+            // Trackpad o scroll suave - multiplicador mucho más agresivo
+            scrollAmount = -e.deltaY * 3;
+        } else {
+            // Rueda de mouse tradicional - velocidad extrema
+            scrollAmount = -Math.sign(e.deltaY) * Math.max(10, Math.abs(e.deltaY) / 3);
+        }
+
+        // Límites muy altos para scroll súper rápido
+        scrollAmount = Math.max(-50, Math.min(50, scrollAmount));
+
+        // Envío inmediato con throttling mínimo para baja latencia
+        if (!this.scrollThrottle) {
+            this.scrollThrottle = true;
+            this.sendMouseScroll(boundedX, boundedY, scrollAmount);
+
+            // Throttling muy corto solo para evitar spam extremo
+            setTimeout(() => {
+                this.scrollThrottle = false;
+            }, 8); // 8ms = ~120fps, mucho más rápido que mouse movement (16ms = 60fps)
+        }
+    }
+
     async connect() {
         const ip = this.serverIP.value.trim();
         if (!ip) {
@@ -619,6 +691,40 @@ class RemoteTypingClient {
             if (error.name === 'TypeError' || error.message.includes('fetch')) {
                 this.disconnect();
             }
+        }
+    }
+
+    async sendMouseScroll(x, y, amount) {
+        try {
+            // Fire-and-forget para mínima latencia - no esperamos respuesta
+            fetch(`${this.serverURL}/mouse`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'scroll',
+                    x: x,
+                    y: y,
+                    amount: amount
+                })
+            }).then(response => {
+                // Solo loggear si hay error, para no bloquear
+                if (!response.ok) {
+                    this.log(`❌ Error scroll: HTTP ${response.status}`, 'error');
+                }
+            }).catch(error => {
+                this.log(`❌ Error scroll: ${error.message}`, 'error');
+                if (error.name === 'TypeError' || error.message.includes('fetch')) {
+                    this.disconnect();
+                }
+            });
+
+            // Log inmediato sin esperar respuesta del servidor
+            this.log(`🖱️ scroll ${amount > 0 ? '↑' : '↓'} (${x}, ${y})`, 'success');
+
+        } catch (error) {
+            this.log(`❌ Error scroll: ${error.message}`, 'error');
         }
     }
 

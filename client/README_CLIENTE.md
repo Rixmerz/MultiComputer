@@ -95,10 +95,34 @@ client/
 ## 🎯 Características
 
 - ✅ **Escritura en tiempo real** - Cada caracter se envía inmediatamente
-- ✅ **Control de mouse** - Movimiento, clicks izquierdo/derecho directo 1:1
+- ✅ **Control completo de mouse** - Movimiento, clicks (izq/der/medio), scroll
+- ✅ **Scroll inteligente** - Scroll en canvas sin afectar la página web
 - ✅ **Detección automática de pantalla** - Se adapta a la resolución del servidor
 - ✅ **Interfaz simplificada** - Canvas único con mapeo directo
 - ✅ **Teclas especiales** - Soporta Backspace y Enter
 - ✅ **Debug log** - Muestra estado de conexiones
 - ✅ **Responsive** - Funciona en computador y móvil
 - ✅ **Auto-reconexión** - Detecta desconexiones automáticamente
+
+## 🎮 Controles
+
+### ⌨️ Teclado
+- **Escritura normal**: Simplemente escribe - cada caracter se envía inmediatamente
+- **Backspace**: Funciona normalmente para borrar
+- **Enter**: Funciona normalmente para nueva línea
+
+### 🖱️ Mouse
+- **Movimiento**: Mueve el mouse sobre el canvas para controlar el cursor remoto
+- **Click izquierdo**: Click normal en el canvas
+- **Click derecho**: Click derecho en el canvas (menú contextual)
+- **Click medio**: Click con rueda del mouse
+- **Scroll**: Usa la rueda del mouse en el canvas para hacer scroll remoto
+- **Toggle de control**: Interruptor para activar/desactivar control de mouse
+
+### 🎯 Funcionalidad de Scroll
+- **Scroll inteligente**: El scroll en el canvas NO afecta la página web
+- **Posición precisa**: El scroll ocurre exactamente donde apuntas el mouse
+- **Control de área**: Solo funciona dentro del área útil del canvas
+- **Respeta toggle**: El scroll se bloquea si el control de mouse está desactivado
+
+**Ver:** `SCROLL_FEATURE.md` para documentación detallada sobre el scroll.

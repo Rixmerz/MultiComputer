@@ -179,11 +179,26 @@ pyautogui.PAUSE = 0.05  # Más rápido (default: 0.1)
 
 ## 📄 Logs y Debug
 
-El servidor muestra información detallada en la consola:
+### 🔇 Modo Silencioso (Recomendado)
+Por defecto, el servidor funciona en **modo silencioso** para evitar spam en la terminal:
+- ✅ Solo muestra errores importantes
+- ✅ No muestra movimientos de mouse
+- ✅ No muestra logs de HTTP requests
+- ✅ Mejor rendimiento
+
+### 🐛 Activar Debug Completo
+Para ver todos los mensajes de actividad, edita `server.py` línea 22:
+```python
+DEBUG_MODE = True  # Cambiar a True para debug completo
+```
+
+**Ver:** `DEBUG_CONFIG.md` para más detalles sobre configuración de debug.
+
+### 📊 Información Mostrada
 - IP local del servidor
-- Requests recibidos
-- Errores y excepciones
 - Estado de conexiones
+- Errores y excepciones importantes
+- Modo de debug actual (silencioso/completo)
 
 ## 🚀 Uso en Producción
 
