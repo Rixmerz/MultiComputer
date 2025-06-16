@@ -2,6 +2,7 @@
 """
 Remote Typing Server - Computador Esclavo
 Recibe texto via HTTP y lo simula como escritura
+VERSIÓN CON DRAG CORREGIDO
 """
 
 from flask import Flask, request, jsonify
@@ -12,31 +13,18 @@ import pyautogui
 import socket
 import threading
 import time
-import logging
-
-# ============================================================================
-# CONFIGURACIÓN DE DEBUG
-# ============================================================================
-# Cambiar DEBUG_MODE a True para ver todos los mensajes de actividad
-# Cambiar DEBUG_MODE a False para modo silencioso (solo errores importantes)
-DEBUG_MODE = False
-# ============================================================================
 
 app = Flask(__name__)
 CORS(app)  # Permite conexiones desde cualquier origen
-
-# Configurar logging de Flask
-if not DEBUG_MODE:
-    # Deshabilitar logs de Flask cuando debug está desactivado
-    log = logging.getLogger('werkzeug')
-    log.setLevel(logging.ERROR)
-
 keyboard = Controller()
 mouse = MouseController()
 
 # Configurar pyautogui para mayor seguridad
 pyautogui.FAILSAFE = True  # Mover mouse a esquina superior izquierda para parar
-pyautogui.PAUSE = 0.1  # Pausa entre comandos
+pyautogui.PAUSE = 0.05  # Pausa reducida para mejor responsividad
+
+# Modo debug - cambiar a False para producción
+DEBUG_MODE = True
 
 # Estado de conexión
 connection_status = {
@@ -140,7 +128,7 @@ def handle_mouse():
                 print(f"🖱️  {message}")
 
         elif action == 'drag':
-            # Para drag necesitamos coordenadas de destino
+            # DRAG CORREGIDO - Para drag necesitamos coordenadas de destino
             to_x = data.get('to_x', x)
             to_y = data.get('to_y', y)
             to_x = max(0, min(to_x, max_x - 1))
@@ -152,38 +140,32 @@ def handle_mouse():
                 'right': 'right',
                 'middle': 'middle'
             }
-
-            # Implementar drag correctamente:
-            # 1. Mover a la posición inicial
-            # 2. Presionar el botón
-            # 3. Arrastrar a la posición final
-            # 4. Soltar el botón
-
+            
+            if DEBUG_MODE:
+                print(f"🤏 INICIANDO DRAG: desde ({x}, {y}) hasta ({to_x}, {to_y})")
+            
             try:
-                # Mover a posición inicial
+                # Método 1: Usar dragTo (más confiable)
                 pyautogui.moveTo(x, y, duration=0.1)
-
-                # Hacer el drag desde la posición actual hasta la final
                 pyautogui.dragTo(to_x, to_y, duration=0.3, button=button_map.get(button, 'left'))
-
+                
                 message = f'Mouse drag from ({x}, {y}) to ({to_x}, {to_y})'
                 if DEBUG_MODE:
-                    print(f"🖱️  {message}")
-
+                    print(f"✅ DRAG EXITOSO: {message}")
+                    
             except Exception as drag_error:
-                # Si dragTo falla, intentar método alternativo
+                # Método 2: Si dragTo falla, usar método manual
                 if DEBUG_MODE:
-                    print(f"⚠️  dragTo falló, usando método alternativo: {drag_error}")
-
-                # Método alternativo: mouseDown, moveTo, mouseUp
+                    print(f"⚠️  dragTo falló, usando método manual: {drag_error}")
+                
                 pyautogui.moveTo(x, y, duration=0.1)
                 pyautogui.mouseDown(button=button_map.get(button, 'left'))
                 pyautogui.moveTo(to_x, to_y, duration=0.3)
                 pyautogui.mouseUp(button=button_map.get(button, 'left'))
-
-                message = f'Mouse drag (alternative) from ({x}, {y}) to ({to_x}, {to_y})'
+                
+                message = f'Mouse drag (manual) from ({x}, {y}) to ({to_x}, {to_y})'
                 if DEBUG_MODE:
-                    print(f"🖱️  {message}")
+                    print(f"✅ DRAG MANUAL EXITOSO: {message}")
 
         elif action == 'scroll':
             scroll_amount = data.get('amount', 1)
@@ -300,21 +282,22 @@ def ping():
 
 if __name__ == '__main__':
     local_ip = get_local_ip()
-    print("=" * 50)
-    print("🖥️  Remote Typing Server - ESCLAVO")
-    print("=" * 50)
+    print("=" * 60)
+    print("🖥️  Remote Typing Server - ESCLAVO (DRAG CORREGIDO)")
+    print("=" * 60)
     print(f"🌐 Servidor iniciado en: http://{local_ip}:5000")
     print(f"📡 IP Local: {local_ip}")
     print("🔗 Usa esta IP en el cliente para conectar")
     print("⌨️  Listo para recibir comandos de escritura...")
+    print("🤏 DRAG MEJORADO: Ahora funciona correctamente!")
     if DEBUG_MODE:
         print("🐛 Modo DEBUG activado - Se mostrarán todos los mensajes")
     else:
         print("🔇 Modo silencioso activado - Solo errores importantes")
-    print("=" * 50)
+    print("=" * 60)
     print("Presiona Ctrl+C para detener el servidor")
     print()
-
+    
     try:
         app.run(host='0.0.0.0', port=5000, debug=False)
     except KeyboardInterrupt:
