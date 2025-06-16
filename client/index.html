@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Typing - Cliente</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⌨️ Remote Typing</h1>
+            <p>Escribe aquí para enviar al computador remoto</p>
+        </header>
+
+        <div class="connection-panel">
+            <div class="connection-row">
+                <input type="text" id="serverIP" placeholder="192.168.1.100" value="192.168.1.100">
+                <button id="connectBtn">Conectar</button>
+            </div>
+            <div class="status" id="status">
+                <span class="status-dot offline"></span>
+                <span id="statusText">Desconectado</span>
+            </div>
+        </div>
+
+        <div class="screen-panel">
+            <div class="screen-controls">
+                <label>Configuración de pantallas:</label>
+                <div class="screen-config">
+                    <div>
+                        <label>Pantalla 1 (arriba): </label>
+                        <input type="number" id="screen1Width" value="1920" placeholder="Ancho"> x 
+                        <input type="number" id="screen1Height" value="1080" placeholder="Alto">
+                    </div>
+                    <div>
+                        <label>Pantalla 2 (abajo): </label>
+                        <input type="number" id="screen2Width" value="1920" placeholder="Ancho"> x 
+                        <input type="number" id="screen2Height" value="1080" placeholder="Alto">
+                    </div>
+                    <button id="updateScreens">Actualizar</button>
+                </div>
+            </div>
+            
+            <div class="screen-display">
+                <canvas id="screenCanvas" width="400" height="300"></canvas>
+                <div class="screen-info">
+                    <span id="mousePosition">Mouse: (0, 0)</span>
+                    <span id="activeScreen">Pantalla: 1</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="typing-panel">
+            <textarea 
+                id="textInput" 
+                placeholder="Escribe aquí - se enviará automáticamente al computador remoto..."
+                disabled
+            ></textarea>
+            
+            <div class="info">
+                <span>✨ Escritura en tiempo real - sin necesidad de enviar</span>
+            </div>
+        </div>
+
+        <div class="debug-panel">
+            <h3>Debug</h3>
+            <div id="debugLog"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
