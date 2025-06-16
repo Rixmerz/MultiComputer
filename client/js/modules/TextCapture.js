@@ -14,20 +14,54 @@ export class TextCapture {
         document.addEventListener('keydown', (e) => {
             if (!this.client.connection.getConnectionStatus()) return;
 
-            // Evitar capturar teclas de navegación y shortcuts
-            if (e.ctrlKey || e.metaKey || e.altKey) return;
-            if (['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'].includes(e.key)) return;
-            if (['Tab', 'Escape'].includes(e.key)) return;
+            // Detectar si es Mac para usar Cmd en lugar de Ctrl
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+            const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
 
-            // Manejar teclas especiales
-            if (e.key === 'Backspace') {
-                this.client.api.sendSpecialKey('backspace');
-                e.preventDefault();
-                return;
+            // Manejar shortcuts (Ctrl/Cmd + tecla)
+            if (ctrlKey && !e.altKey && !e.shiftKey) {
+                const shortcuts = {
+                    'a': 'select_all',
+                    'c': 'copy',
+                    'v': 'paste',
+                    'x': 'cut',
+                    'z': 'undo',
+                    'y': 'redo',
+                    's': 'save',
+                    'f': 'find',
+                    'n': 'new',
+                    'o': 'open',
+                    'p': 'print',
+                    'r': 'refresh'
+                };
+
+                const shortcut = shortcuts[e.key.toLowerCase()];
+                if (shortcut) {
+                    this.client.api.sendShortcut(shortcut);
+                    e.preventDefault();
+                    return;
+                }
             }
 
-            if (e.key === 'Enter') {
-                this.client.api.sendSpecialKey('enter');
+            // Evitar capturar otros shortcuts del sistema
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+            // Evitar teclas de función
+            if (['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'].includes(e.key)) return;
+
+            // Manejar teclas especiales
+            const specialKeys = {
+                'Backspace': 'backspace',
+                'Enter': 'enter',
+                'Tab': 'tab',
+                'Escape': 'escape',
+                'Delete': 'delete',
+                ' ': 'space'
+            };
+
+            const specialKey = specialKeys[e.key];
+            if (specialKey) {
+                this.client.api.sendSpecialKey(specialKey);
                 e.preventDefault();
                 return;
             }

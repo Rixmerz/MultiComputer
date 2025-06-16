@@ -659,3 +659,64 @@ body.dark-mode #debugLog {
 .debug-info {
     color: #3498db;
 }
+
+/* Grilla de shortcuts */
+.shortcuts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.shortcut-item:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+}
+
+.shortcut-key {
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: bold;
+    background: #495057;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    min-width: 80px;
+    text-align: center;
+}
+
+.shortcut-desc {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Dark mode para shortcuts */
+body.dark-mode .shortcut-item {
+    background: #34495e;
+    border-color: #5d6d7e;
+}
+
+body.dark-mode .shortcut-item:hover {
+    background: #3c5a78;
+}
+
+body.dark-mode .shortcut-key {
+    background: #2c3e50;
+    color: #ecf0f1;
+}
+
+body.dark-mode .shortcut-desc {
+    color: #bdc3c7;
+}

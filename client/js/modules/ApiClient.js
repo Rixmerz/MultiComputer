@@ -31,7 +31,8 @@ export class ApiClient {
 
     async sendSpecialKey(key) {
         // Validar tecla
-        if (!['backspace', 'enter'].includes(key)) {
+        const validKeys = ['backspace', 'enter', 'tab', 'escape', 'delete', 'space'];
+        if (!validKeys.includes(key)) {
             return;
         }
 
@@ -51,6 +52,29 @@ export class ApiClient {
             }
         } catch (error) {
             this.client.logger.log(`❌ Error tecla especial: ${error.message}`, 'error');
+            if (error.name === 'TypeError' || error.message.includes('fetch')) {
+                this.client.connection.disconnect();
+            }
+        }
+    }
+
+    async sendShortcut(shortcut) {
+        try {
+            const response = await fetch(`${this.client.connection.getServerURL()}/shortcut`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ shortcut: shortcut })
+            });
+
+            if (response.ok) {
+                this.client.logger.log(`⚡ ${shortcut}`, 'success');
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (error) {
+            this.client.logger.log(`❌ Error shortcut: ${error.message}`, 'error');
             if (error.name === 'TypeError' || error.message.includes('fetch')) {
                 this.client.connection.disconnect();
             }

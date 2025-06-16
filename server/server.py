@@ -271,7 +271,7 @@ def handle_special_key():
     try:
         data = request.get_json()
         key = data.get('key', '')
-        
+
         if key == 'backspace':
             keyboard.press(Key.backspace)
             keyboard.release(Key.backspace)
@@ -280,9 +280,25 @@ def handle_special_key():
             keyboard.press(Key.enter)
             keyboard.release(Key.enter)
             action = 'Enter'
+        elif key == 'tab':
+            keyboard.press(Key.tab)
+            keyboard.release(Key.tab)
+            action = 'Tab'
+        elif key == 'escape':
+            keyboard.press(Key.esc)
+            keyboard.release(Key.esc)
+            action = 'Escape'
+        elif key == 'delete':
+            keyboard.press(Key.delete)
+            keyboard.release(Key.delete)
+            action = 'Delete'
+        elif key == 'space':
+            keyboard.press(Key.space)
+            keyboard.release(Key.space)
+            action = 'Space'
         else:
             return jsonify({'status': 'error', 'message': 'Tecla especial no reconocida'}), 400
-            
+
         connection_status['last_activity'] = time.time()
 
         # Solo mostrar mensaje de debug si está habilitado
@@ -293,7 +309,108 @@ def handle_special_key():
             'status': 'success',
             'message': f'Special key: {action}' if DEBUG_MODE else 'OK'
         })
-        
+
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/shortcut', methods=['POST'])
+def handle_shortcut():
+    """Endpoint para manejar shortcuts/comandos rápidos como Ctrl+C, Cmd+V, etc."""
+    try:
+        data = request.get_json()
+        shortcut = data.get('shortcut', '')
+
+        # Detectar sistema operativo para usar Cmd en Mac o Ctrl en Windows/Linux
+        import platform
+        is_mac = platform.system() == 'Darwin'
+        ctrl_key = Key.cmd if is_mac else Key.ctrl
+
+        if shortcut == 'select_all':  # Ctrl/Cmd + A
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('a')
+                keyboard.release('a')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + A (Select All)'
+
+        elif shortcut == 'copy':  # Ctrl/Cmd + C
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('c')
+                keyboard.release('c')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + C (Copy)'
+
+        elif shortcut == 'paste':  # Ctrl/Cmd + V
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('v')
+                keyboard.release('v')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + V (Paste)'
+
+        elif shortcut == 'undo':  # Ctrl/Cmd + Z
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('z')
+                keyboard.release('z')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + Z (Undo)'
+
+        elif shortcut == 'redo':  # Ctrl/Cmd + Y
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('y')
+                keyboard.release('y')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + Y (Redo)'
+
+        elif shortcut == 'cut':  # Ctrl/Cmd + X
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('x')
+                keyboard.release('x')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + X (Cut)'
+
+        elif shortcut == 'save':  # Ctrl/Cmd + S
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('s')
+                keyboard.release('s')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + S (Save)'
+
+        elif shortcut == 'find':  # Ctrl/Cmd + F
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('f')
+                keyboard.release('f')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + F (Find)'
+
+        elif shortcut == 'new':  # Ctrl/Cmd + N
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('n')
+                keyboard.release('n')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + N (New)'
+
+        elif shortcut == 'open':  # Ctrl/Cmd + O
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('o')
+                keyboard.release('o')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + O (Open)'
+
+        elif shortcut == 'print':  # Ctrl/Cmd + P
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('p')
+                keyboard.release('p')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + P (Print)'
+
+        elif shortcut == 'refresh':  # Ctrl/Cmd + R
+            with keyboard.pressed(ctrl_key):
+                keyboard.press('r')
+                keyboard.release('r')
+            action = f'{"Cmd" if is_mac else "Ctrl"} + R (Refresh)'
+
+        else:
+            return jsonify({'status': 'error', 'message': 'Shortcut no reconocido'}), 400
+
+        connection_status['last_activity'] = time.time()
+
+        # Solo mostrar mensaje de debug si está habilitado
+        if DEBUG_MODE:
+            print(f"⚡ Shortcut: {action}")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Shortcut: {action}' if DEBUG_MODE else 'OK'
+        })
+
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 

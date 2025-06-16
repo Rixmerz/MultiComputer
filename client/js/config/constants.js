@@ -77,7 +77,23 @@ export const CONFIG = {
     },
 
     // Teclas especiales permitidas
-    SPECIAL_KEYS: ['backspace', 'enter'],
+    SPECIAL_KEYS: ['backspace', 'enter', 'tab', 'escape', 'delete', 'space'],
+
+    // Shortcuts permitidos
+    SHORTCUTS: {
+        'select_all': 'Ctrl/Cmd + A',
+        'copy': 'Ctrl/Cmd + C',
+        'paste': 'Ctrl/Cmd + V',
+        'cut': 'Ctrl/Cmd + X',
+        'undo': 'Ctrl/Cmd + Z',
+        'redo': 'Ctrl/Cmd + Y',
+        'save': 'Ctrl/Cmd + S',
+        'find': 'Ctrl/Cmd + F',
+        'new': 'Ctrl/Cmd + N',
+        'open': 'Ctrl/Cmd + O',
+        'print': 'Ctrl/Cmd + P',
+        'refresh': 'Ctrl/Cmd + R'
+    },
 
     // Teclas de navegación que se ignoran
     IGNORED_KEYS: [
