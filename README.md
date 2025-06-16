@@ -68,13 +68,16 @@ MultiKeyboard/
 
 ## 🎯 Características
 
+- ✅ **Control completo de mouse** - Movimiento, clicks, y tracking preciso
 - ✅ **Escritura en tiempo real** - Cada caracter se envía inmediatamente
 - ✅ **Teclas especiales** - Soporta Backspace, Enter
 - ✅ **Multiplataforma** - Windows, macOS, Linux
-- ✅ **Interfaz web** - Funciona en cualquier navegador
+- ✅ **Interfaz web moderna** - Funciona en cualquier navegador
 - ✅ **Móvil compatible** - Usa desde tu teléfono
 - ✅ **Auto-limpieza** - Scripts limpian puertos automáticamente
 - ✅ **Debug integrado** - Logs de conexión y estado
+- ✅ **Modo oscuro** - Interfaz adaptable
+- ✅ **Control granular** - Toggle para activar/desactivar funciones
 
 ## 🛠️ Uso Detallado
 
@@ -126,6 +129,66 @@ start_client.bat     # Windows
 - Instala Python desde: https://www.python.org/downloads/
 - En Windows, marca "Add Python to PATH"
 
-## 📄 Licencia
+## ⚠️ ADVERTENCIAS DE SEGURIDAD
 
-Proyecto de código abierto para uso educativo y personal.
+### 🔒 **USO EN REDES PRIVADAS ÚNICAMENTE**
+- **NUNCA uses este software en redes públicas** (WiFi de cafeterías, aeropuertos, hoteles, etc.)
+- **Solo para redes domésticas o corporativas confiables**
+- El tráfico NO está encriptado - cualquiera en la red puede interceptar las comunicaciones
+
+### 🛡️ **Consideraciones de Seguridad**
+- **Sin autenticación**: Cualquier dispositivo en la red puede conectarse al servidor
+- **Sin encriptación**: Todas las teclas y movimientos del mouse se envían en texto plano
+- **Acceso completo**: El servidor permite control total del teclado y mouse
+- **Firewall**: Asegúrate de que tu firewall esté configurado apropiadamente
+
+### 🏠 **Casos de Uso Recomendados**
+- ✅ Control remoto dentro de tu hogar
+- ✅ Redes corporativas privadas y seguras
+- ✅ Laboratorios y entornos de desarrollo controlados
+- ✅ Presentaciones en redes locales confiables
+
+### � **NO Usar En**
+- ❌ WiFi público (cafeterías, aeropuertos, hoteles)
+- ❌ Redes compartidas con desconocidos
+- ❌ Entornos donde la privacidad es crítica
+- ❌ Sistemas con información sensible sin medidas adicionales de seguridad
+
+### 🔧 **Recomendaciones Adicionales**
+- Usa solo cuando sea necesario y desconecta cuando termines
+- Considera usar una VPN si necesitas mayor seguridad
+- Monitorea las conexiones activas en tu red
+- Mantén el software actualizado
+
+## �📄 Licencia
+
+**Licencia de Uso Público**
+
+Este software se proporciona "tal como está" para uso público y educativo.
+
+### ✅ **Permisos**
+- ✅ Uso personal y comercial
+- ✅ Modificación del código
+- ✅ Distribución
+- ✅ Uso privado
+
+### ❌ **Limitaciones**
+- ❌ Sin garantía de ningún tipo
+- ❌ Los autores no son responsables por daños o mal uso
+- ❌ Sin soporte técnico garantizado
+
+### 📋 **Condiciones**
+- Mantén este aviso de licencia en las copias
+- Usa bajo tu propia responsabilidad
+- Respeta las leyes locales sobre software de control remoto
+
+### ⚖️ **Descargo de Responsabilidad**
+El uso de este software es bajo tu propia responsabilidad. Los desarrolladores no se hacen responsables por:
+- Uso indebido del software
+- Violaciones de seguridad
+- Daños a sistemas o datos
+- Uso en entornos no seguros
+- Violaciones de privacidad
+
+**Desarrollado por:** Rixmerz 😵‍💫
+**Contribuciones:** Bienvenidas a través de pull requests
