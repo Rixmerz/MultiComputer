@@ -56,7 +56,11 @@ export class TextCapture {
                 'Tab': 'tab',
                 'Escape': 'escape',
                 'Delete': 'delete',
-                ' ': 'space'
+                ' ': 'space',
+                'ArrowUp': 'arrow_up',
+                'ArrowDown': 'arrow_down',
+                'ArrowLeft': 'arrow_left',
+                'ArrowRight': 'arrow_right'
             };
 
             const specialKey = specialKeys[e.key];

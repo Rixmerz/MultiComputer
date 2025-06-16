@@ -1007,6 +1007,31 @@ class RemoteTypingClient {
                 return;
             }
 
+            // Manejar teclas de flecha para navegación de texto
+            if (e.key === 'ArrowUp') {
+                this.sendSpecialKey('arrow_up');
+                e.preventDefault();
+                return;
+            }
+
+            if (e.key === 'ArrowDown') {
+                this.sendSpecialKey('arrow_down');
+                e.preventDefault();
+                return;
+            }
+
+            if (e.key === 'ArrowLeft') {
+                this.sendSpecialKey('arrow_left');
+                e.preventDefault();
+                return;
+            }
+
+            if (e.key === 'ArrowRight') {
+                this.sendSpecialKey('arrow_right');
+                e.preventDefault();
+                return;
+            }
+
             // Manejar caracteres normales
             if (e.key.length === 1) {
                 this.sendCharacter(e.key);

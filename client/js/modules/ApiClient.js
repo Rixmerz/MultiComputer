@@ -31,7 +31,7 @@ export class ApiClient {
 
     async sendSpecialKey(key) {
         // Validar tecla
-        const validKeys = ['backspace', 'enter', 'tab', 'escape', 'delete', 'space'];
+        const validKeys = ['backspace', 'enter', 'tab', 'escape', 'delete', 'space', 'arrow_up', 'arrow_down', 'arrow_left', 'arrow_right'];
         if (!validKeys.includes(key)) {
             return;
         }

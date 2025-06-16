@@ -296,6 +296,22 @@ def handle_special_key():
             keyboard.press(Key.space)
             keyboard.release(Key.space)
             action = 'Space'
+        elif key == 'arrow_up':
+            keyboard.press(Key.up)
+            keyboard.release(Key.up)
+            action = 'Arrow Up'
+        elif key == 'arrow_down':
+            keyboard.press(Key.down)
+            keyboard.release(Key.down)
+            action = 'Arrow Down'
+        elif key == 'arrow_left':
+            keyboard.press(Key.left)
+            keyboard.release(Key.left)
+            action = 'Arrow Left'
+        elif key == 'arrow_right':
+            keyboard.press(Key.right)
+            keyboard.release(Key.right)
+            action = 'Arrow Right'
         else:
             return jsonify({'status': 'error', 'message': 'Tecla especial no reconocida'}), 400
 
@@ -458,18 +474,24 @@ def ping():
 
 if __name__ == '__main__':
     local_ip = get_local_ip()
-    print("=" * 50)
-    print("🖥️  Remote Typing Server - ESCLAVO")
-    print("=" * 50)
+    print("=" * 80)
+    print("🖥️  Remote Typing Server - ESCLAVO (COMPLETO)")
+    print("=" * 80)
     print(f"🌐 Servidor iniciado en: http://{local_ip}:5000")
     print(f"📡 IP Local: {local_ip}")
     print("🔗 Usa esta IP en el cliente para conectar")
     print("⌨️  Listo para recibir comandos de escritura...")
+    print("🤏 DRAG REALTIME: Movimiento suave en tiempo real")
+    print("⚡ SHORTCUTS HABILITADOS:")
+    print("   • Ctrl/Cmd + A, C, V, X, Z, Y, S, F, N, O, P, R")
+    print("   • Tab, Escape, Delete, Space, Backspace, Enter")
+    print("   • Flechas: ↑ ↓ ← → (navegación de texto)")
+    print("   • Detección automática Mac/Windows/Linux")
     if DEBUG_MODE:
         print("🐛 Modo DEBUG activado - Se mostrarán todos los mensajes")
     else:
         print("🔇 Modo silencioso activado - Solo errores importantes")
-    print("=" * 50)
+    print("=" * 80)
     print("Presiona Ctrl+C para detener el servidor")
     print()
 
